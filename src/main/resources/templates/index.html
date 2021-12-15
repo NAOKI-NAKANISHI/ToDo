@@ -1,48 +1,107 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta charset="UTF-8">
+	    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>TODOアプリ</title>
+        <!-- jQuery -->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/dataTables.bootstrap4.min.css"/>
+
+        <!-- Sweet Alert -->
+        <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+        <link th:href="@{/css/index.css}" rel="styleSheet">
+        <script th:src="@{/js/index.js}"></script>
     </head>
     <body>
-        <h1>Hello</h1>
-        <table class="task-type-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>種別名</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="taskType : ${allTaskType}" th:object="${taskType}">
-                    <td class="id" th:text="*{id}"></td>
-                    <td class="taskName" th:text="*{taskName}"></td>
-                </tr>
-            </tbody>
-        </table>
-        <table class="task-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>種別名</th>
-                    <th>やること</th>
-                    <th>詳細</th>
-                    <th>期限</th>
-                    <th>作成日時</th>
-                    <th>更新日時</th>
-                    <th>削除フラグ</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="task : ${allTask}" th:object="${task}">
-                    <td class="id" th:text="*{id}"></td>
-                    <td class="taskName" th:text="*{taskType.taskName}"></td>
-                    <td class="detail" th:text="*{detail}"></td>
-                    <td class="limitDate" th:text="*{limitDate}"></td>
-                    <td class="createdDate" th:text="*{createdDate}"></td>
-                    <td class="updatedDate" th:text="*{updatedDate}"></td>
-                    <td class="delFlg" th:text="*{delFlg} ? '削除' : '未削除'"></td>
-                </tr>
-            </tbody>
-        </table>
+        <!-- ヘッダー -->
+        <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top justify-content-between">
+            <a class="navbar-brand" th:href="@{/}">TODO</a>
+            <span class="register-btn btn btn-outline-success my-2 my-sm-0" type="submit">新規作成</span>
+        </nav>
+
+        <main role="main" class="container">
+            <div class="task-table-parent w-100 mx-auto">
+                <!-- TODO一覧表ー -->
+                <table class="task-table table table-striped" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th class="text-center">ID</th>
+                            <th class="text-center">タスク種別</th>
+                            <th class="text-center">やること</th>
+                            <th class="text-center">詳細</th>
+                            <th class="text-center">期限</th>
+                            <th class="text-center">編集</th>
+                            <th class="text-center">削除</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="task : ${allTask}" th:object="${task}">
+                            <td class="task-id" th:text="*{id}"></td>
+                            <td class="task-name" th:text="*{taskType.taskName}"></td>
+                            <input type="hidden" class="task-type-id" th:value="*{taskType.id}">
+                            <td class="title" th:text="*{title}"></td>
+                            <td class="detail" th:text="*{detail}"></td>
+                            <td class="limit-date" th:text="${#temporals.format(task.limitDate, 'yyyy年MM月dd日 H時mm分')}"></td>
+                            <input type="hidden" class="format-limit-date" th:value="${#temporals.format(task.limitDate, 'yyyy-MM-dd HH:mm')}">
+                            <td class="edit-btn"><span class="pe-auto mx-auto gg-clipboard"></span></td>
+                            <td class="delete-btn"><span class="pe-auto mx-auto gg-trash"></span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+        
+        <!-- モーダルダイアログ -->
+        <div class="modal fade" id="todo-modal">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+            
+                    <!-- ヘッダー -->
+                    <div class="modal-header">
+                    <h4 class="modal-title">タスク詳細</h4>
+                    <span type="button" class="close" data-dismiss="modal">&times;</span>
+                    </div>
+            
+                    <!-- ボディ -->
+                    <div class="modal-body">
+                        <div class="todo-register-form">
+                            <div class="mb-3">
+                                <label for="address">タスク種別（選択してください）</label>
+                                <select id="todo-task-type" class="form-control">
+                                    <option th:each="taskType : ${allTaskType}" th:value="${taskType.id}" >[[${taskType.taskName}]]</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="address">やること</label>
+                                <input type="text" class="form-control" id="todo-title" maxlength="255" placeholder="例：数学課題">
+                            </div>
+                            <div class="mb-3">
+                                <label for="address">詳細</label>
+                                <input type="text" class="form-control" id="todo-detail" maxlength="255" placeholder="例：数学の問題集を20Pまで進める">
+                            </div>
+                            <div class="mb-3">
+                                <label for="address">期限</label>
+                                <input type="datetime-local" class="form-control" id="todo-limit-date">
+                            </div>
+                            <input type="hidden" id="todo-id">
+                            <span class="mt-4 btn btn-primary btn-block send-btn" type="submit">登録</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DataTables -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+        <script src="//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+        <script src="//cdn.datatables.net/1.10.16/js/dataTables.bootstrap4.min.js"></script>
+
     </body>
 </html>
