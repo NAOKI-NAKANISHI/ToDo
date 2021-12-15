@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>TODOアプリ</title>
+    </head>
+    <body>
+        <h1>Hello</h1>
+        <table class="task-type-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>種別名</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="taskType : ${allTaskType}" th:object="${taskType}">
+                    <td class="id" th:text="*{id}"></td>
+                    <td class="taskName" th:text="*{taskName}"></td>
+                </tr>
+            </tbody>
+        </table>
+        <table class="task-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>種別名</th>
+                    <th>やること</th>
+                    <th>詳細</th>
+                    <th>期限</th>
+                    <th>作成日時</th>
+                    <th>更新日時</th>
+                    <th>削除フラグ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="task : ${allTask}" th:object="${task}">
+                    <td class="id" th:text="*{id}"></td>
+                    <td class="taskName" th:text="*{taskType.taskName}"></td>
+                    <td class="detail" th:text="*{detail}"></td>
+                    <td class="limitDate" th:text="*{limitDate}"></td>
+                    <td class="createdDate" th:text="*{createdDate}"></td>
+                    <td class="updatedDate" th:text="*{updatedDate}"></td>
+                    <td class="delFlg" th:text="*{delFlg} ? '削除' : '未削除'"></td>
+                </tr>
+            </tbody>
+        </table>
+    </body>
+</html>
